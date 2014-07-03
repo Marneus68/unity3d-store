@@ -47,6 +47,7 @@ namespace Soomla.Store
 		GUIContent noneBPLabel = new GUIContent("You have your own Billing Service");
 		GUIContent playLabel = new GUIContent("Google Play");
 		GUIContent amazonLabel = new GUIContent("Amazon");
+		GUIContent nokiaLabel = new GUIContent("Nokia Store");
 		GUIContent publicKeyLabel = new GUIContent("API Key [?]:", "The API key from Google Play dev console (just in case you're using Google Play as billing provider).");
 		GUIContent testPurchasesLabel = new GUIContent("Test Purchases [?]:", "Check if you want to allow purchases of Google's test product ids.");
 		GUIContent packageNameLabel = new GUIContent("Package Name [?]", "Your package as defined in Unity.");
@@ -94,7 +95,7 @@ namespace Soomla.Store
 				EditorGUILayout.Space();
 				EditorGUILayout.HelpBox("Billing Service Selection", MessageType.None);
 				
-				if (!GPlayBP && !AmazonBP && !NoneBP) {
+				if (!GPlayBP && !AmazonBP && !NokiaBP && !NoneBP) {
 					GPlayBP = true;
 				}
 
@@ -105,11 +106,13 @@ namespace Soomla.Store
 				if (NoneBP && !update) {
 					setCurrentBPUpdate("none");
 					
-					AmazonBP = false;
-					GPlayBP = false;
+					AmazonBP    = false;
+					GPlayBP     = false;
+                    NokiaBP     = false;
 					SoomlaManifestTools.GenerateManifest();
 					handlePlayBPJars(true);
 					handleAmazonBPJars(true);
+					handleNokiaBPJars(true);
 				}
 
 
@@ -136,9 +139,11 @@ namespace Soomla.Store
 					
 					AmazonBP = false;
 					NoneBP = false;
+                    NokiaBP = false;
 					SoomlaManifestTools.GenerateManifest();
 					handlePlayBPJars(false);
 					handleAmazonBPJars(true);
+                    handleNokiaBPJars(true);
 				}
 				
 
@@ -149,10 +154,26 @@ namespace Soomla.Store
 					
 					GPlayBP = false;
 					NoneBP = false;
+                    NokiaBP = false;
 					SoomlaManifestTools.GenerateManifest();
 					handlePlayBPJars(true);
 					handleAmazonBPJars(false);
+                    handleNokiaBPJars(true);
 				}
+
+				NokiaBP = EditorGUILayout.ToggleLeft(nokiaLabel, NokiaBP);
+				bpUpdate.TryGetValue("nokia", out update);
+                if (NokiaBP && !update) {
+                    setCurrentBPUpdate("nokia");
+
+					GPlayBP = false;
+					NoneBP = false;
+                    AmazonBP = false;
+					SoomlaManifestTools.GenerateManifest();
+					handlePlayBPJars(true);
+					handleAmazonBPJars(true);
+                    handleNokiaBPJars(false);
+                }
 			}
 			EditorGUILayout.Space();
 		}
@@ -206,7 +227,17 @@ namespace Soomla.Store
 			}catch {}
 		}
 
-
+		public static void handleNokiaBPJars(bool remove) {
+			try {
+				if (remove) {
+					FileUtil.DeleteFileOrDirectory(Application.dataPath + "/Plugins/Android/AndroidStoreNokiaStore.jar");
+					FileUtil.DeleteFileOrDirectory(Application.dataPath + "/Plugins/Android/AndroidStoreNokiaStore.jar.meta");
+				} else {
+					FileUtil.CopyFileOrDirectory(bpRootPath + "nokia/AndroidStoreNokiaStore.jar",
+					                             Application.dataPath + "/Plugins/Android/AndroidStoreNokiaStore.jar");
+				}
+			}catch {}
+		}
 
 #endif
 
@@ -329,7 +360,23 @@ namespace Soomla.Store
 			}
 		}
 		
-
+		public static bool NokiaBP
+		{
+			get { 
+				string value;
+				return SoomlaEditorScript.Instance.SoomlaSettings.TryGetValue("NokiaBP", out value) ? Convert.ToBoolean(value) : false;
+			}
+			set 
+			{
+				string v;
+				SoomlaEditorScript.Instance.SoomlaSettings.TryGetValue("NokiaBP", out v);
+				if (Convert.ToBoolean(v) != value)
+				{
+					SoomlaEditorScript.Instance.setSettingsValue("NokiaBP",value.ToString());
+					SoomlaEditorScript.DirtyEditor ();
+				}
+			}
+		}
 		
 	}
 }

@@ -50,6 +50,20 @@ namespace Soomla.Store
 			} else {
 				SoomlaManifestTools.RemoveApplicationElement("receiver", "com.amazon.inapp.purchasing.ResponseReceiver");
 			}
+
+			if (StoreSettings.NokiaBP) {
+				SoomlaManifestTools.SetPermission("com.nokia.payment.BILLING");
+				SoomlaManifestTools.AddActivity("com.soomla.store.billing.nokia.NokiaStoreIabService$IabActivity",
+				                             new Dictionary<string, string>() { 
+													{"theme", "@android:style/Theme.Translucent.NoTitleBar.Fullscreen"} 
+											 });
+				SoomlaManifestTools.AddMetaDataTag("billing.service", "nokia.NokiaStoreIabService");
+			} else {
+				// removing BILLING permission
+				SoomlaManifestTools.RemovePermission("com.nokia.payment.BILLING");
+				// removing Iab Activity
+				SoomlaManifestTools.RemoveActivity("com.soomla.store.billing.google.GooglePlayIabService$IabActivity");
+			}
 		}
 
 #endif
